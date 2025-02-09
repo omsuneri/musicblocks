@@ -1,99 +1,57 @@
-name: PR Review Bot
+name: PR Linter Bot
 
 on:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
-  review:
+  lint:
+    name: Lint PR Files
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # ✅ Fetch at least the last commit to compare changes
+          fetch-depth: 2  # Fetch enough history to compare changes
 
-      - name: Set Up Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'
 
       - name: Install Dependencies
         run: npm install
 
-      - name: Run ESLint (Only on Changed Files)
-        id: eslint
+      - name: Get Changed Files
+        id: changed-files
         run: |
-          touch eslint_output.txt  # ✅ Ensure file always exists
-          
-          # Fetch main branch in case it's missing
           git fetch origin main --depth=1 || true
-
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep -E '\.js$' || true)
-
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD -- '*.js' || true)
           if [ -z "$CHANGED_FILES" ]; then
-            echo "No JavaScript files changed, skipping lint." > eslint_output.txt
-            echo "OUTPUT=No JavaScript files changed." >> $GITHUB_ENV
+            echo "No JavaScript files changed, skipping lint."
+            echo "NO_JS_CHANGED=true" >> $GITHUB_ENV
           else
-            OUTPUT=$(echo "$CHANGED_FILES" | xargs npx eslint --ignore-pattern 'node_modules/*' --ignore-pattern 'dist/*' || true)
-            echo "$OUTPUT" > eslint_output.txt
-            echo "OUTPUT<<EOF" >> $GITHUB_ENV
-            echo "$OUTPUT" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+            echo "$CHANGED_FILES" > changed_files.txt
+            echo "NO_JS_CHANGED=false" >> $GITHUB_ENV
           fi
 
-      - name: Analyze PR Changes
-        id: pr_analysis
+      - name: Run ESLint on Changed Files
+        if: env.NO_JS_CHANGED == 'false'
         run: |
-          CHANGES=$(git diff --name-only origin/main)
-          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
-          echo "$CHANGES" >> $GITHUB_ENV
+          OUTPUT=$(cat changed_files.txt | xargs npx eslint --ignore-pattern 'node_modules/*' --ignore-pattern 'dist/*' || true)
+          echo "$OUTPUT" > eslint_output.txt
+          echo "OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$OUTPUT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        if: always()
+      - name: Post Comment on PR
+        if: env.NO_JS_CHANGED == 'false'
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const output = fs.readFileSync('eslint_output.txt', 'utf8');
-            const changedFiles = process.env.CHANGED_FILES;
-            let commentBody = `### 🔍 PR Review Bot Report\n`;
-
-            if (output.trim() !== '') {
-              commentBody += `#### 🚨 Linting & Syntax Issues Found:\n\`\`\`\n${output}\n\`\`\`\n`;
-            } else {
-              commentBody += `✅ No linting or syntax errors found!\n`;
-            }
-
-            commentBody += `#### 📁 Changed Files:\n\`\`\`\n${changedFiles}\n\`\`\`\n`;
-            commentBody += `⚡ **Tip for Reviewers:** Focus on key changes, large diffs, and logic improvements!`;
-
-            github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody
-            });
-
-      - name: Add PR Labels
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = context.payload.pull_request.number;
-            const output = process.env.OUTPUT;
-
-            let labels = ["ready-for-review"];
-            if (output.trim() !== "") {
-              labels.push("needs-fixes");
-            }
-
-            github.rest.issues.addLabels({
-              owner,
-              repo,
-              issue_number: prNumber,
-              labels
-            });
+          message: |
+            ## 🛠️ ESLint Report for Changed Files
+            ```
+            ${{ env.OUTPUT }}
+            ```
+          comment_tag: eslint-bot
