@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # ✅ Fetch at least the last commit to compare changes
 
       - name: Set Up Node.js
         uses: actions/setup-node@v4
@@ -23,7 +25,11 @@ jobs:
         id: eslint
         run: |
           touch eslint_output.txt  # ✅ Ensure file always exists
-          CHANGED_FILES=$(git diff --name-only origin/main | grep -E '\.js$' || true)
+          
+          # Fetch main branch in case it's missing
+          git fetch origin main --depth=1 || true
+
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep -E '\.js$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No JavaScript files changed, skipping lint." > eslint_output.txt
@@ -35,8 +41,6 @@ jobs:
             echo "$OUTPUT" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           fi
-
-
 
       - name: Analyze PR Changes
         id: pr_analysis
