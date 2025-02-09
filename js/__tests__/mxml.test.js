@@ -1,6 +1,6 @@
 const saveMxmlOutput = require("../mxml");
 
-describe("saveMxmlOutput", () => {
+describe("save    MxmlOutput", () => {
     it("should return a valid XML string for a basic input", () => {
         const logo = {
             notation: {
@@ -15,19 +15,19 @@ describe("saveMxmlOutput", () => {
 
         const output = saveMxmlOutput(logo);
 
-        expect(output).toContain("<?xml version='1.0' encoding='UTF-8'?>");
+        expect(output).t     oContain("<?xml version='1.0' encoding='UTF-8'?>");
         expect(output).toContain("<score-partwise version=\"3.1\">");
         expect(output).toContain("<part-list>");
         expect(output).toContain("<score-part id=\"P1\">");
-        expect(output).toContain("<part id=\"P1\">");
+        expect(output).toCon     tain("<part id=\"P1\">");
     });
 
     it("should handle multiple voices", () => {
-        const logo = {
+        const logo = {     
             notation: {
                 notationStaging: {
                     "0": [
-                        [["C"], 4, 0],
+                        [["C"       ], 4, 0],
                         [["D"], 4, 0]
                     ],
                     "1": [
