@@ -22,9 +22,11 @@ jobs:
       - name: Run ESLint (Only on Changed Files)
         id: eslint
         run: |
+          touch eslint_output.txt  # ✅ Ensure file always exists
           CHANGED_FILES=$(git diff --name-only origin/main | grep -E '\.js$' || true)
+
           if [ -z "$CHANGED_FILES" ]; then
-            echo "No JavaScript files changed, skipping lint."
+            echo "No JavaScript files changed, skipping lint." > eslint_output.txt
             echo "OUTPUT=No JavaScript files changed." >> $GITHUB_ENV
           else
             OUTPUT=$(echo "$CHANGED_FILES" | xargs npx eslint --ignore-pattern 'node_modules/*' --ignore-pattern 'dist/*' || true)
@@ -33,6 +35,7 @@ jobs:
             echo "$OUTPUT" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           fi
+
 
 
       - name: Analyze PR Changes
