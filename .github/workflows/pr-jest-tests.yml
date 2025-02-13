@@ -34,7 +34,7 @@ jobs:
         run: |
           TOTAL_TESTS=$(jq '.numTotalTests' test-results.json)
           FAILED_TESTS=$(jq '.numFailedTests' test-results.json)
-          FAILED_NAMES=$(jq -r '.testResults[] | select(.status=="failed") | .name' test-results.json | xargs -I {} basename {})
+          FAILED_NAMES=$(jq -r '.testResults[] | select(.status=="failed") | .assertionResults[].fullName' test-results.json | xargs -I {} echo "- {}")
 
           echo "TOTAL_TESTS=$TOTAL_TESTS" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
@@ -42,22 +42,34 @@ jobs:
           echo "$FAILED_NAMES" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
+      - name: Debug Environment Variables
+        run: |
+          echo "TOTAL_TESTS: $TOTAL_TESTS"
+          echo "FAILED_TESTS: $FAILED_TESTS"
+          echo "FAILED_NAMES: $FAILED_NAMES"
+
       - name: Add PR Comment with Jest results
         uses: actions/github-script@v7
+        env:
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FAILED_NAMES: ${{ env.FAILED_NAMES }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const totalTests = process.env.TOTAL_TESTS || "unknown";
             const failedTests = process.env.FAILED_TESTS || "unknown";
-            const failedNames = process.env.FAILED_NAMES ? process.env.FAILED_NAMES.split("\n").filter(n => n).join("\n- ") : "None";
+            const failedNames = process.env.FAILED_NAMES ? process.env.FAILED_NAMES.split("\n").filter(n => n).join("\n") : "None";
+
+            const { context } = require('@actions/github');
 
             const message = failedTests === "0"
               ? `✅ All ${totalTests} Jest tests passed! Ready to merge. 🚀`
-              : `❌ Jest Test Results:
+              : `❌ **Jest Test Results:**
                 - **Total Tests**: ${totalTests}
                 - **Failed Tests**: ${failedTests}
                 - **Failed Cases**:
-                  - ${failedNames}`;
+                ${failedNames}`;
 
             github.rest.issues.createComment({
               owner: context.repo.owner,
