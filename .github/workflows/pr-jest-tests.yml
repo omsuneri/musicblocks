@@ -22,7 +22,7 @@ jobs:
       - name: Run Jest tests
         id: run-tests
         run: |
-          npm test | tee test-results.txt
+          npm test -- --ci --verbose --colors | tee test-results.txt
           if [ ${PIPESTATUS[0]} -eq 0 ]; then
             echo "TESTS_PASSED=true" >> $GITHUB_ENV
           else
@@ -43,7 +43,7 @@ jobs:
             const fs = require('fs');
             const path = 'test-results.txt';
             const output = fs.existsSync(path) ? fs.readFileSync(path, 'utf8') : 'No output captured.';
-            const truncatedOutput = output.length > 6000 ? output.slice(-6000) : output;
+            const truncatedOutput = output.length > 6000 ? output.slice(-6000) : output;  // Avoid GitHub API limits
 
             const message = process.env.TESTS_PASSED === 'true'
               ? `✅ All Jest tests passed! Ready to merge.\n\n<details><summary>Test Output</summary>\n\n\`\`\`\n${truncatedOutput}\n\`\`\`\n\n</details>`
