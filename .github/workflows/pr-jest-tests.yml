@@ -29,6 +29,9 @@ jobs:
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
           fi
 
+      - name: Debug Test Results File
+        run: cat test-results.json || echo "No test results found."
+
       - name: Process Jest Results
         id: process-results
         run: |
@@ -57,11 +60,18 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const github = require('@actions/github');
+
             const totalTests = process.env.TOTAL_TESTS || "unknown";
             const failedTests = process.env.FAILED_TESTS || "unknown";
             const failedNames = process.env.FAILED_NAMES ? process.env.FAILED_NAMES.split("\n").filter(n => n).join("\n") : "None";
 
-            const { context } = require('@actions/github');
+            const prNumber = github.context.payload.pull_request ? github.context.payload.pull_request.number : null;
+
+            if (!prNumber) {
+              console.log("❌ No PR number found. This action only runs on pull requests.");
+              process.exit(1);
+            }
 
             const message = failedTests === "0"
               ? `✅ All ${totalTests} Jest tests passed! Ready to merge. 🚀`
@@ -72,8 +82,13 @@ jobs:
                 ${failedNames}`;
 
             github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              issue_number: prNumber,
               body: message
+            }).then(() => {
+              console.log("✅ PR comment posted successfully.");
+            }).catch(error => {
+              console.error("❌ Error posting PR comment:", error);
+              process.exit(1);
             });
