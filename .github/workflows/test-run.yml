@@ -33,10 +33,14 @@ jobs:
         run: |
           if [ "$TESTS_FAILED" = "true" ]; then
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
-            echo "RESULTS=$(jq '.testResults | map({name: .name, status: .status})' jest-results.json)" >> $GITHUB_ENV
+            echo "RESULTS<<EOF" >> $GITHUB_ENV
+            jq -c '.testResults | map({name: .name, status: .status})' jest-results.json >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
           else
             echo "TESTS_PASSED=true" >> $GITHUB_ENV
-            echo "RESULTS=$(jq '.testResults | map({name: .name, status: .status})' jest-results.json)" >> $GITHUB_ENV
+            echo "RESULTS<<EOF" >> $GITHUB_ENV
+            jq -c '.testResults | map({name: .name, status: .status})' jest-results.json >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
           fi
 
       - name: Post Comment on PR
@@ -50,3 +54,4 @@ jobs:
             ${{ env.RESULTS }}
             ```
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
