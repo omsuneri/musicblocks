@@ -1,0 +1,99 @@
+name: Run Jest Tests on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        id: run-tests
+        run: |
+          npm test -- --ci --verbose --json --outputFile=test-results.json
+          if [ $? -eq 0 ]; then
+            echo "TESTS_PASSED=true" >> $GITHUB_ENV
+          else
+            echo "TESTS_PASSED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Debug Test Results File
+        run: cat test-results.json || echo "No test results found."
+
+      - name: Process Jest Results
+        id: process-results
+        run: |
+          TOTAL_TESTS=$(jq '.numTotalTests' test-results.json)
+          FAILED_TESTS=$(jq '.numFailedTests' test-results.json)
+          FAILED_NAMES=$(jq -r '.testResults[] | select(.status=="failed") | .assertionResults[].fullName' test-results.json | xargs -I {} echo "- {}")
+
+          echo "TOTAL_TESTS=$TOTAL_TESTS" >> $GITHUB_ENV
+          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
+          echo "FAILED_NAMES<<EOF" >> $GITHUB_ENV
+          echo "$FAILED_NAMES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Debug Environment Variables
+        run: |
+          echo "TOTAL_TESTS: $TOTAL_TESTS"
+          echo "FAILED_TESTS: $FAILED_TESTS"
+          echo "FAILED_NAMES: $FAILED_NAMES"
+
+      - name: Add PR Comment with Jest results
+        uses: actions/github-script@v7
+        env:
+          TOTAL_TESTS: ${{ env.TOTAL_TESTS }}
+          FAILED_TESTS: ${{ env.FAILED_TESTS }}
+          FAILED_NAMES: ${{ env.FAILED_NAMES }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const github = require('@actions/github');
+            const context = github.context;
+
+            const totalTests = process.env.TOTAL_TESTS || "unknown";
+            const failedTests = process.env.FAILED_TESTS || "unknown";
+            const failedNames = process.env.FAILED_NAMES ? process.env.FAILED_NAMES.split("\n").filter(n => n).join("\n") : "None";
+
+            const prNumber = context.payload.pull_request?.number;
+            
+            if (!prNumber) {
+              console.log("❌ No PR number found. This action only runs on pull requests.");
+              process.exit(1);
+            }
+
+            const message = failedTests === "0"
+              ? `✅ All ${totalTests} Jest tests passed! Ready to merge. 🚀`
+              : `❌ **Jest Test Results:**
+                - **Total Tests**: ${totalTests}
+                - **Failed Tests**: ${failedTests}
+                - **Failed Cases**:
+                ${failedNames}`;
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: message
+            }).then(() => {
+              console.log("✅ PR comment posted successfully.");
+            }).catch(error => {
+              console.error("❌ Error posting PR comment:", error);
+              process.exit(1);
+            });
+
