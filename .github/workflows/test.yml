@@ -50,6 +50,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          FAILED_TESTS_FORMATTED=$(echo -e "${{ env.FAILED_TESTS }}")
-          COMMENT="${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}\n\n**Failed Tests:**\n\n\`\`\`\n$FAILED_TESTS_FORMATTED\n\`\`\`"
-          gh pr comment $PR_NUMBER --body "$COMMENT"
+          FAILED_TESTS_FORMATTED=$(echo "${{ env.FAILED_TESTS }}" | sed 's/^/  /')
+          echo -e "${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}\n\n**Failed Tests:**\n\n\`\`\`\n$FAILED_TESTS_FORMATTED\n\`\`\`" | gh pr comment $PR_NUMBER --body -
