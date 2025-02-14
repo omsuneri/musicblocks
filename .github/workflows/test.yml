@@ -36,12 +36,13 @@ jobs:
         run: |
           if [ "$TESTS_FAILED" = "true" ]; then
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
+            FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | join("\n")' jest-results.json)
             echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
-            jq -c '[.testResults[] | select(.status == "failed") | {name: .name}]' jest-results.json >> $GITHUB_ENV
+            echo "$FAILED_TESTS" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           else
             echo "TESTS_PASSED=true" >> $GITHUB_ENV
-            echo "FAILED_TESTS=[]" >> $GITHUB_ENV
+            echo "FAILED_TESTS=None" >> $GITHUB_ENV
           fi
 
       - name: Post Comment on PR using GitHub CLI
@@ -49,5 +50,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          COMMENT="${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}\n\n**Failed Tests:**\n\`\`\`json\n${{ env.FAILED_TESTS }}\n\`\`\`"
+          COMMENT="${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}\n\n**Failed Tests:**\n\`\`\`\n${{ env.FAILED_TESTS }}\n\`\`\`"
           gh pr comment $PR_NUMBER --body "$COMMENT"
