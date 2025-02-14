@@ -6,6 +6,9 @@ on:
       - opened
       - synchronize
 
+permissions:
+  pull-requests: write
+
 jobs:
   test:
     name: Run Jest Tests
