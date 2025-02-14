@@ -36,7 +36,7 @@ jobs:
         run: |
           if [ "$TESTS_FAILED" = "true" ]; then
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
-            FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | join("\n")' jest-results.json)
+            FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | map(split("/") | last) | join("\n")' jest-results.json)
             echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
             echo "$FAILED_TESTS" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
