@@ -33,14 +33,12 @@ jobs:
         run: |
           if [ "$TESTS_FAILED" = "true" ]; then
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
-            echo "RESULTS<<EOF" >> $GITHUB_ENV
-            jq -c '.testResults | map({name: .name, status: .status})' jest-results.json >> $GITHUB_ENV
+            echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
+            jq -c '[.testResults[] | select(.status == "failed") | {name: .name}]' jest-results.json >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           else
             echo "TESTS_PASSED=true" >> $GITHUB_ENV
-            echo "RESULTS<<EOF" >> $GITHUB_ENV
-            jq -c '.testResults | map({name: .name, status: .status})' jest-results.json >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+            echo "FAILED_TESTS=[]" >> $GITHUB_ENV
           fi
 
       - name: Post Comment on PR
@@ -49,8 +47,8 @@ jobs:
           message: |
             ${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}
             
-            **Test Results:**
+            **Failed Tests:**
             ```json
-            ${{ env.RESULTS }}
+            ${{ env.FAILED_TESTS }}
             ```
           repo-token: ${{ secrets.GITHUB_TOKEN }}
