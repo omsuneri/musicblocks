@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test:
-    name: Run Jest Tests on Merged Code
+    name: Run Jest Tests
     runs-on: ubuntu-latest
 
     steps:
