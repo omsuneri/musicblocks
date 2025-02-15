@@ -21,13 +21,13 @@
 
 // This header is prepended to the Abc output.
 const ABCHEADER = "X:1\nT:Music Blocks composition\nC:Mr. Mouse\nL:1/16\nM:C\n";
-const OCTAVE_NOTATION_MAP = {
-    10: "'''''",
-    9: "''''",
-    8: "'''",
-    7: "''",
-    6: "'",
-    5: "",
+// const OCTAVE_NOTATION_MAP = {
+//     10: "'''''",
+//     9: "''''",
+//     8: "'''",
+//     7: "''",
+//     6: "'",
+//     5: "",
     4: "",
     3: ",",
     2: ",,",
@@ -119,20 +119,20 @@ const processABCNotes = function(logo, turtle) {
                 case "break":
                     if (i > 0) {
                         logo.notationNotes[turtle] += "\n";
-                    }
-                    counter = 0;
-                    break;
-                case "begin articulation":
-                    articulation = true;
-                    break;
-                case "end articulation":
-                    articulation = false;
-                    break;
-                case "begin crescendo":
-                    logo.notationNotes[turtle] += "!<(!";
-                    break;
-                case "end crescendo":
-                    logo.notationNotes[turtle] += "!<)!";
+                //     }
+                //     counter = 0;
+                //     break;
+                // case "begin articulation":
+                //     articulation = true;
+                //     break;
+                // case "end articulation":
+                //     articulation = false;
+                //     break;
+                // case "begin crescendo":
+                //     logo.notationNotes[turtle] += "!<(!";
+                //     break;
+                // case "end crescendo":
+                //     logo.notationNotes[turtle] += "!<)!";
                     break;
                 case "begin decrescendo":
                     logo.notationNotes[turtle] += "!>(!";
@@ -348,29 +348,6 @@ const processABCNotes = function(logo, turtle) {
                     logo.notationNotes[turtle] += " ";
                 }
 
-                if (obj[NOTATIONSTACCATO]) {
-                    logo.notationNotes[turtle] += ".";
-                }
-
-                if (obj[NOTATIONINSIDECHORD] > 0) {
-                    // Is logo the first note in the chord?
-                    if (i === 0 ||
-                        logo.notation.notationStaging[turtle][i - 1][
-                            NOTATIONINSIDECHORD
-                        ] !== obj[NOTATIONINSIDECHORD]) {
-                        // Open the chord.
-                        logo.notationNotes[turtle] += "[";
-                    }
-
-                    logo.notationNotes[turtle] += note;
-
-                    // Is logo the last note in the chord?
-                    if (i === logo.notation.notationStaging[turtle].length - 1
-                        || logo.notation.notationStaging[turtle][i + 1][
-                            NOTATIONINSIDECHORD] !== obj[NOTATIONINSIDECHORD]) {
-                        // Close the chord and add note duration.
-                        logo.notationNotes[turtle] += "]";
-                        logo.notationNotes[turtle] += __convertDuration(
                             obj[NOTATIONDURATION]);
                         for (let d = 0; d < obj[NOTATIONDOTCOUNT]; d++) {
                             logo.notationNotes[turtle] += " ";
