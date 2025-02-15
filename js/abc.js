@@ -21,13 +21,13 @@
 
 // This header is prepended to the Abc output.
 const ABCHEADER = "X:1\nT:Music Blocks composition\nC:Mr. Mouse\nL:1/16\nM:C\n";
-const OCTAVE_NOTATION_MAP = {
-    10: "'''''",
-    9: "''''",
-    8: "'''",
-    7: "''",
-    6: "'",
-    5: "",
+// const OCTAVE_NOTATION_MAP = {
+//     10: "'''''",
+//     9: "''''",
+//     8: "'''",
+//     7: "''",
+//     6: "'",
+//     5: "",
     4: "",
     3: ",",
     2: ",,",
