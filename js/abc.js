@@ -119,20 +119,20 @@ const processABCNotes = function(logo, turtle) {
                 case "break":
                     if (i > 0) {
                         logo.notationNotes[turtle] += "\n";
-                    }
-                    counter = 0;
-                    break;
-                case "begin articulation":
-                    articulation = true;
-                    break;
-                case "end articulation":
-                    articulation = false;
-                    break;
-                case "begin crescendo":
-                    logo.notationNotes[turtle] += "!<(!";
-                    break;
-                case "end crescendo":
-                    logo.notationNotes[turtle] += "!<)!";
+                //     }
+                //     counter = 0;
+                //     break;
+                // case "begin articulation":
+                //     articulation = true;
+                //     break;
+                // case "end articulation":
+                //     articulation = false;
+                //     break;
+                // case "begin crescendo":
+                //     logo.notationNotes[turtle] += "!<(!";
+                //     break;
+                // case "end crescendo":
+                //     logo.notationNotes[turtle] += "!<)!";
                     break;
                 case "begin decrescendo":
                     logo.notationNotes[turtle] += "!>(!";
