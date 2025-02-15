@@ -106,35 +106,6 @@ class Palettes {
     _makeSelectorButton(i) {
         // eslint-disable-next-line no-console
         console.debug("makeSelectorButton " + i);
-
-        if (!document.getElementById("palette")) {
-            const element = document.createElement("div");
-            element.id = "palette";
-            element.setAttribute("class", "disable_highlighting");
-            element.classList.add('flex-palette')
-            element.setAttribute(
-                "style",
-                "position: absolute; z-index: 1000; left :0px; top:" + this.top + "px"
-            );
-            element.innerHTML =
-                `<div style="height:fit-content">
-                    <table width="${1.5 * this.cellSize}" bgcolor="white">
-                        <thead>
-                            <tr></tr>
-                        </thead>
-                    </table>
-                    <table width ="${4.5 * this.cellSize}" bgcolor="white">
-                        <thead>
-                            <tr>
-                                <td style= "width:28px"></td>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>`;
-            element.childNodes[0].style.border = `1px solid ${platformColor.selectorSelected}`;
-            document.body.appendChild(element);
-        }
         const tr = docById("palette").children[0].children[0].children[0].children[0];
         const td = tr.insertCell();
         td.width = 1.5 * this.cellSize;
