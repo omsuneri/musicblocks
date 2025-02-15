@@ -348,29 +348,6 @@ const processABCNotes = function(logo, turtle) {
                     logo.notationNotes[turtle] += " ";
                 }
 
-                if (obj[NOTATIONSTACCATO]) {
-                    logo.notationNotes[turtle] += ".";
-                }
-
-                if (obj[NOTATIONINSIDECHORD] > 0) {
-                    // Is logo the first note in the chord?
-                    if (i === 0 ||
-                        logo.notation.notationStaging[turtle][i - 1][
-                            NOTATIONINSIDECHORD
-                        ] !== obj[NOTATIONINSIDECHORD]) {
-                        // Open the chord.
-                        logo.notationNotes[turtle] += "[";
-                    }
-
-                    logo.notationNotes[turtle] += note;
-
-                    // Is logo the last note in the chord?
-                    if (i === logo.notation.notationStaging[turtle].length - 1
-                        || logo.notation.notationStaging[turtle][i + 1][
-                            NOTATIONINSIDECHORD] !== obj[NOTATIONINSIDECHORD]) {
-                        // Close the chord and add note duration.
-                        logo.notationNotes[turtle] += "]";
-                        logo.notationNotes[turtle] += __convertDuration(
                             obj[NOTATIONDURATION]);
                         for (let d = 0; d < obj[NOTATIONDOTCOUNT]; d++) {
                             logo.notationNotes[turtle] += " ";
