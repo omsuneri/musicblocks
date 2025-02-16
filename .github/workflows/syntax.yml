@@ -52,12 +52,12 @@ jobs:
 
                 COMMENTS+=$(printf "%s\n" "{\"path\":\"$FILE\",\"position\":$LINE,\"body\":\"Please correct the syntax error on line $LINE: $MESSAGE\"},")
                 ERROR_FOUND=true
-              done
-            done
+              done  # Close inner while loop
+            done  # Close outer while loop
+          done  # Close for loop
 
           echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
           echo "ERROR_FOUND=$ERROR_FOUND" >> $GITHUB_ENV
-
 
       - name: Post PR comments for syntax errors
         if: env.ERROR_FOUND == 'true'
