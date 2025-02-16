@@ -22,8 +22,12 @@ jobs:
         id: changed-files
         run: |
           CHANGED_FILES=$(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js')
-          echo "files=$CHANGED_FILES" >> $GITHUB_ENV
+          
+          # Convert newlines to spaces to prevent formatting errors
+          CHANGED_FILES=$(echo "$CHANGED_FILES" | tr '\n' ' ')
 
+          echo "files=$CHANGED_FILES" >> $GITHUB_ENV
+          
       - name: Install ESLint
         run: npm install eslint
 
