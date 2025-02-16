@@ -27,17 +27,22 @@ jobs:
         id: get_files
         run: |
           git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }} ${{ github.head_ref }}
-          FILES=$(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js')
-          echo "CHANGED_FILES=$FILES" >> $GITHUB_ENV
-          echo "Changed files: $FILES"
+          CHANGED_FILES=$(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js')
+
+          # Ensure proper formatting
+          CHANGED_FILES=$(echo "$CHANGED_FILES" | tr '\n' ' ')  # Convert newlines to spaces
+          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "Changed files: $CHANGED_FILES"
 
       - name: Run ESLint and collect errors
         id: eslint_check
         run: |
           ERROR_FOUND=false
-          COMMENTS=""
+          COMMENTS="[]"
 
-          for FILE in $CHANGED_FILES; do
+          IFS=' ' read -r -a FILE_ARRAY <<< "$CHANGED_FILES"
+
+          for FILE in "${FILE_ARRAY[@]}"; do
             echo "Checking: $FILE"
             OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$FILE" || echo "[]")
 
@@ -45,19 +50,24 @@ jobs:
 
             if [[ "$ERROR_COUNT" -gt 0 ]]; then
               ERROR_FOUND=true
+              COMMENT_LIST="["
+
               echo "$OUTPUT" | jq -c '.[] | {filePath: .filePath, messages: .messages[]}' | while read -r LINE; do
                 FILE_PATH=$(echo "$LINE" | jq -r '.filePath' | sed "s|$GITHUB_WORKSPACE/||")
                 LINE_NUM=$(echo "$LINE" | jq -r '.messages.line')
                 ERROR_MSG=$(echo "$LINE" | jq -r '.messages.message')
 
                 COMMENT="{\"path\": \"$FILE_PATH\", \"position\": $LINE_NUM, \"body\": \"❌ Syntax error on line $LINE_NUM: $ERROR_MSG\"}"
-                COMMENTS+="$COMMENT,"
+                COMMENT_LIST+="$COMMENT,"
               done
+
+              COMMENT_LIST="${COMMENT_LIST%,}]"  # Remove trailing comma and close array
+              COMMENTS=$COMMENT_LIST
             fi
           done
 
           echo "ERROR_FOUND=$ERROR_FOUND" >> $GITHUB_ENV
-          echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
+          echo "COMMENTS=$COMMENTS" >> $GITHUB_ENV
           echo "Final ERROR_FOUND: $ERROR_FOUND"
           echo "Final COMMENTS: $COMMENTS"
 
