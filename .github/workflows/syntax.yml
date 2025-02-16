@@ -46,7 +46,7 @@ jobs:
             echo "Checking: $FILE"
             OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$FILE" || echo "[]")
 
-            ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(.messages | length) | add')
+            ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(.messages | length) | add // 0')
 
             if [[ "$ERROR_COUNT" -gt 0 ]]; then
               ERROR_FOUND=true
@@ -54,11 +54,13 @@ jobs:
 
               echo "$OUTPUT" | jq -c '.[] | {filePath: .filePath, messages: .messages[]}' | while read -r LINE; do
                 FILE_PATH=$(echo "$LINE" | jq -r '.filePath' | sed "s|$GITHUB_WORKSPACE/||")
-                LINE_NUM=$(echo "$LINE" | jq -r '.messages.line')
+                LINE_NUM=$(echo "$LINE" | jq -r '.messages.line // 0')  # Convert null to 0
                 ERROR_MSG=$(echo "$LINE" | jq -r '.messages.message')
 
-                COMMENT="{\"path\": \"$FILE_PATH\", \"position\": $LINE_NUM, \"body\": \"❌ Syntax error on line $LINE_NUM: $ERROR_MSG\"}"
-                COMMENT_LIST+="$COMMENT,"
+                if [[ "$LINE_NUM" -gt 0 ]]; then  # Only add valid errors
+                  COMMENT="{\"path\": \"$FILE_PATH\", \"position\": $LINE_NUM, \"body\": \"❌ Syntax error on line $LINE_NUM: $ERROR_MSG\"}"
+                  COMMENT_LIST+="$COMMENT,"
+                fi
               done
 
               COMMENT_LIST="${COMMENT_LIST%,}]"  # Remove trailing comma and close array
