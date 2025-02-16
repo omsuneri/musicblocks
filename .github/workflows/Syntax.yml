@@ -1,0 +1,82 @@
+name: Syntax Check on PR
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  syntax-check:
+    name: Check syntax errors in changed files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Get changed JavaScript files
+        id: changed-files
+        run: |
+          CHANGED_FILES=$(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js')
+          echo "files=$CHANGED_FILES" >> $GITHUB_ENV
+
+      - name: Install ESLint
+        run: npm install eslint
+
+      - name: Run ESLint and capture syntax errors
+        id: eslint-check
+        run: |
+          ERROR_FOUND=false
+          COMMENTS=""
+
+          for file in ${{ env.files }}; do
+            echo "Checking syntax in: $file"
+            OUTPUT=$(npx eslint --no-ignore --format json "$file" || true)
+            
+            if [[ -n "$OUTPUT" && "$OUTPUT" != "[]" ]]; then
+              ERROR_FOUND=true
+              ERRORS=$(echo "$OUTPUT" | jq -c '.[] | {file: .filePath, messages: .messages}')
+
+              while IFS= read -r error; do
+                FILE=$(echo "$error" | jq -r '.file')
+                while IFS= read -r msg; do
+                  LINE=$(echo "$msg" | jq -r '.line')
+                  MESSAGE=$(echo "$msg" | jq -r '.message')
+                  COMMENTS+=$(printf "%s\n" "{\"path\":\"$FILE\",\"position\":$LINE,\"body\":\"Please correct the syntax error on line $LINE: $MESSAGE\"},")
+                done < <(echo "$error" | jq -c '.messages[] | select(.fatal == true)')
+              done < <(echo "$ERRORS")
+            fi
+          done
+
+          echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
+          echo "ERROR_FOUND=$ERROR_FOUND" >> $GITHUB_ENV
+
+      - name: Post PR comments for syntax errors
+        if: env.ERROR_FOUND == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          for comment in $(echo '${{ env.COMMENTS }}' | jq -c '.[]'); do
+            FILE=$(echo "$comment" | jq -r '.path')
+            LINE=$(echo "$comment" | jq -r '.position')
+            BODY=$(echo "$comment" | jq -r '.body')
+
+            gh api repos/{owner}/{repo}/pulls/$PR_NUMBER/comments \
+              -f body="$BODY" \
+              -f path="$FILE" \
+              -f line="$LINE" \
+              -f commit_id="${{ github.event.pull_request.head.sha }}"
+          done
+
+      - name: Post 'All OK' comment if no syntax errors
+        if: env.ERROR_FOUND == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          gh pr comment $PR_NUMBER --body "✅ All OK! No syntax errors found."
