@@ -34,30 +34,25 @@ jobs:
       - name: Run ESLint and capture syntax errors
         id: eslint-check
         run: |
-          ERROR_FOUND=false
+          ERROR_FOUND="false"
           COMMENTS=""
 
-          for file in ${{ env.files }}; do
+          for file in $(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js'); do
             echo "Checking syntax in: $file"
 
             # Run ESLint and capture output
             OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$file" || echo "[]")
-            
+
             # Print ESLint output for debugging
             echo "ESLint Output: $OUTPUT"
 
-            # Ensure JSON is valid before processing
-            if [[ "$OUTPUT" == "[]" ]]; then
-              continue
-            fi
-
-            # Detect if ESLint found errors
+            # Check if ESLint output contains errors
             ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(select(.messages | length > 0)) | length')
 
             if [[ "$ERROR_COUNT" -gt 0 ]]; then
-              ERROR_FOUND=true
+              ERROR_FOUND="true"
 
-              # Extract errors and format comments
+              # Extract errors and format PR comments
               echo "$OUTPUT" | jq -c '.[]' | while IFS= read -r error; do
                 FILE=$(echo "$error" | jq -r '.filePath')
 
@@ -71,12 +66,21 @@ jobs:
             fi
           done
 
-          echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
           echo "ERROR_FOUND=$ERROR_FOUND" >> $GITHUB_ENV
 
-          # **Fix for syntax error when evaluating ERROR_FOUND**
+          # Ensure COMMENTS is a valid JSON array
+          if [[ -z "$COMMENTS" ]]; then
+            echo "COMMENTS=[]" >> $GITHUB_ENV
+          else
+            echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
+          fi
+
+          # Debugging output
+          echo "Final ERROR_FOUND: $ERROR_FOUND"
+          echo "Final COMMENTS: $COMMENTS"
+
+          # Exit with error if syntax issues were found
           if [[ "$ERROR_FOUND" == "true" ]]; then
-            echo "Syntax errors detected!"
             exit 1
           fi
 
@@ -85,13 +89,13 @@ jobs:
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 
-          PAYLOAD=$(jq -n --argjson comments "[${COMMENTS%,}]" '{comments: $comments}')
+          PAYLOAD=$(jq -n --argjson comments "$COMMENTS" '{comments: $comments}')
 
           echo "Sending review comments..."
           curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews \
-               -d "$PAYLOAD"
+               -d "$PAYLOAD" \
+               https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews
 
       - name: Comment "All OK" if no errors
         if: env.ERROR_FOUND == 'false'
