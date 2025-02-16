@@ -281,14 +281,14 @@ const TACAT = {
     increment: "box",
     box: "ignore",
     namedbox: "ignore",
-    storein2: "box",
+    storein2: "box"
     storein: "box",
 
     // action palette
 
     do: "action",
     return: "action",
-    returnToUrl: "action",
+    returnToUrl: "action"
     calc: "action",
     namedcalc: "action",
     nameddoArg: "action",
@@ -746,14 +746,14 @@ const runAnalytics = (activity) => {
     const logo = activity.logo;
     const turtles = activity.turtles;
     // Using lilypond output to run through code and get some stats.
-    logo.runningLilypond = true;
+    logo.runningLilypond = true
     logo.notationNotes = {};
     for (let turtle = 0; turtle < turtles.getTurtleCount(); turtle++) {
         logo.notation.notationStaging[turtle] = [];
         logo.notation.notationDrumStaging[turtle] = [];
         turtles.getTurtle(turtle).painter.doClear(true, true, true);
     }
-    document.body.style.cursor = "wait";
+    document.body.style.cursor = "wait"
     logo.collectingStats = true;
     logo.runLogoCommands();
 };
