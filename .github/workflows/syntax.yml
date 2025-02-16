@@ -12,11 +12,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
         with:
-          node-version: 18
+          fetch-depth: 0  # Fetch full commit history
+
+      - name: Fetch base branch
+        run: git fetch origin master --depth=1
 
       - name: Get changed JavaScript files
         id: changed-files
