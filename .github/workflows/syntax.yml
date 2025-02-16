@@ -1,94 +1,72 @@
-name: Syntax Check on PR
+name: ESLint Syntax Check
 
 on:
   pull_request:
     branches: [master]
 
 jobs:
-  syntax-check:
-    name: Check syntax errors in changed files
+  lint:
+    name: Check for Syntax Errors
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          fetch-depth: 0  # Fetch full commit history
+          node-version: 16
 
-      - name: Fetch base branch
-        run: git fetch origin master --depth=1
-
-      - name: Get changed JavaScript files
-        id: changed-files
-        run: |
-          CHANGED_FILES=$(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js')
-          
-          # Convert newlines to spaces to prevent formatting errors
-          CHANGED_FILES=$(echo "$CHANGED_FILES" | tr '\n' ' ')
-
-          echo "files=$CHANGED_FILES" >> $GITHUB_ENV
-          
-      - name: Install ESLint
+      - name: Install dependencies
         run: npm install eslint
 
-      - name: Run ESLint and capture syntax errors
-        id: eslint-check
+      - name: Get changed JavaScript files
+        id: get_files
         run: |
-          ERROR_FOUND="false"
+          FILES=$(git diff --diff-filter=d --name-only origin/${{ github.base_ref }}..origin/${{ github.head_ref }} -- '*.js')
+          echo "CHANGED_FILES=$FILES" >> $GITHUB_ENV
+          echo "Changed files: $FILES"
+
+      - name: Run ESLint and collect errors
+        id: eslint_check
+        run: |
+          ERROR_FOUND=false
           COMMENTS=""
 
-          for file in $(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js'); do
-            echo "Checking syntax in: $file"
+          for FILE in $CHANGED_FILES; do
+            echo "Checking: $FILE"
+            OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$FILE" || echo "[]")
 
-            # Run ESLint and capture output
-            OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$file" 2>/dev/null || echo "[]")
-
-            # Print ESLint output for debugging
-            echo "ESLint Output: $OUTPUT"
-
-            # Extract errors count properly
             ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(.messages | length) | add')
 
             if [[ "$ERROR_COUNT" -gt 0 ]]; then
-              ERROR_FOUND="true"
+              ERROR_FOUND=true
 
-              # Extract errors and format PR comments
-              echo "$OUTPUT" | jq -c '.[]' | while IFS= read -r file_data; do
-                FILE=$(echo "$file_data" | jq -r '.filePath' | sed "s|/home/runner/work/musicblocks/musicblocks/||")
+              echo "$OUTPUT" | jq -c '.[] | {filePath: .filePath, messages: .messages[]}' | while read -r LINE; do
+                FILE_PATH=$(echo "$LINE" | jq -r '.filePath' | sed "s|$GITHUB_WORKSPACE/||")
+                LINE_NUM=$(echo "$LINE" | jq -r '.messages.line')
+                ERROR_MSG=$(echo "$LINE" | jq -r '.messages.message')
 
-                echo "$file_data" | jq -c '.messages[] | select(.fatal == true)' | while IFS= read -r msg; do
-                  LINE=$(echo "$msg" | jq -r '.line')
-                  MESSAGE=$(echo "$msg" | jq -r '.message')
-
-                  COMMENTS+=$(printf "%s\n" "{\"path\":\"$FILE\",\"position\":$LINE,\"body\":\"❌ Syntax error on line $LINE: $MESSAGE\"},")
-                done
+                COMMENT="{\"path\": \"$FILE_PATH\", \"position\": $LINE_NUM, \"body\": \"❌ Syntax error on line $LINE_NUM: $ERROR_MSG\"}"
+                COMMENTS+="$COMMENT,"
               done
             fi
           done
 
           echo "ERROR_FOUND=$ERROR_FOUND" >> $GITHUB_ENV
-
-          # Ensure COMMENTS is a valid JSON array
-          if [[ -z "$COMMENTS" ]]; then
-            echo "COMMENTS=[]" >> $GITHUB_ENV
-          else
-            echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
-          fi
-
-          # Debugging output
+          echo "COMMENTS=[${COMMENTS%,}]" >> $GITHUB_ENV
           echo "Final ERROR_FOUND: $ERROR_FOUND"
           echo "Final COMMENTS: $COMMENTS"
 
-          # Exit with error if syntax issues were found
           if [[ "$ERROR_FOUND" == "true" ]]; then
             exit 1
           fi
 
-      - name: Comment on PR if syntax errors are found
+      - name: Comment on PR if errors exist
         if: env.ERROR_FOUND == 'true'
         run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-
+          PR_NUMBER=${{ github.event.pull_request.number }}
           PAYLOAD=$(jq -n --argjson comments "$COMMENTS" '{comments: $comments}')
 
           curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -96,13 +74,14 @@ jobs:
                -d "$PAYLOAD" \
                https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews
 
-      - name: Comment "All OK" if no errors
+      - name: Post "All OK" comment if no errors
         if: env.ERROR_FOUND == 'false'
         run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          PR_NUMBER=${{ github.event.pull_request.number }}
 
           curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
                -d '{"body": "✅ No syntax errors found! Great job!"}' \
                https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments
+
 
