@@ -843,14 +843,7 @@ const getStatsFromNotation = (activity) => {
     }
 
     const blockList = activity.blocks.blockList;
-    projectStats["rests"] = 0;
-    projectStats["ornaments"] = 0;
-    for (const b of blockList) {
-        if (b.trash) {
-            continue;
-        }
-        switch (b.name) {
-            case "rest2":
+   
                 projectStats["rests"]++;
                 break;
             case "":
