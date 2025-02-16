@@ -1,0 +1,95 @@
+name: ESLint Syntax Check
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    name: Check Syntax Errors
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # Ensure proper diff detection
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install ESLint
+        run: npm install eslint
+
+      - name: Get changed JavaScript files
+        id: get_files
+        run: |
+          git fetch origin ${{ github.base_ref }} ${{ github.head_ref }}
+          CHANGED_FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}..origin/${{ github.head_ref }} -- '*.js')
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No JavaScript files changed."
+            exit 0
+          fi
+
+          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "Changed files: $CHANGED_FILES"
+
+      - name: Run ESLint on changed files
+        id: eslint_check
+        run: |
+          ERROR_FOUND=false
+          COMMENTS=""
+
+          for FILE in $CHANGED_FILES; do
+            echo "Checking: $FILE"
+            OUTPUT=$(npx eslint "$FILE" --format json || true)
+
+            ERROR_COUNT=$(echo "$OUTPUT" | grep -o '"errorCount":[0-9]*' | cut -d: -f2)
+            if [ "$ERROR_COUNT" -gt 0 ]; then
+              ERROR_FOUND=true
+              FILE_COMMENTS=""
+
+              while IFS= read -r LINE; do
+                LINE_NUM=$(echo "$LINE" | grep -o '"line":[0-9]*' | cut -d: -f2)
+                ERROR_MSG=$(echo "$LINE" | grep -o '"message":"[^"]*' | cut -d'"' -f4)
+
+                if [ -n "$LINE_NUM" ] && [ -n "$ERROR_MSG" ]; then
+                  FILE_COMMENTS+="❌ Syntax error in **$FILE** at line $LINE_NUM: $ERROR_MSG"$'\n'
+                fi
+              done <<< "$(echo "$OUTPUT" | grep -o '{"line":[0-9]*,"message":"[^"]*')"
+
+              COMMENTS+="$FILE_COMMENTS"$'\n'
+            fi
+          done
+
+          echo "ERROR_FOUND=$ERROR_FOUND" >> $GITHUB_ENV
+          echo "COMMENTS=$COMMENTS" >> $GITHUB_ENV
+          echo "Final ERROR_FOUND: $ERROR_FOUND"
+          echo -e "Final COMMENTS:\n$COMMENTS"
+
+          if [ "$ERROR_FOUND" = "true" ]; then
+            exit 1
+          fi
+
+      - name: Post syntax error comments on PR
+        if: env.ERROR_FOUND == 'true'
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          COMMENT_BODY="### ❌ ESLint Syntax Errors Found:\n\n$COMMENTS"
+
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               -d "{\"body\": \"$COMMENT_BODY\"}" \
+               https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments
+
+      - name: Post "All OK" comment if no errors
+        if: env.ERROR_FOUND == 'false'
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               -d '{"body": "✅ No syntax errors found! Good job!"}' \
+               https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments
