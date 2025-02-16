@@ -35,14 +35,19 @@ jobs:
 
           for file in ${{ env.files }}; do
             echo "Checking syntax in: $file"
-            OUTPUT=$(npx eslint --no-ignore --format json "$file" || true)
+            OUTPUT=$(npx eslint --no-ignore --format json "$file" 2>/dev/null || echo "[]")  # Ensure valid JSON output
             
-            if [[ -n "$OUTPUT" && "$OUTPUT" != "[]" ]]; then
+            if [[ "$OUTPUT" == "[]" ]]; then
+              continue  # Skip if ESLint output is empty
+            fi
+            
+            ERRORS=$(echo "$OUTPUT" | jq -c 'map(select(.messages | length > 0))')  # Filter files with errors
+
+            if [[ "$ERRORS" != "[]" ]]; then
               ERROR_FOUND=true
-              ERRORS=$(echo "$OUTPUT" | jq -c '.[] | {file: .filePath, messages: .messages}')
 
               while IFS= read -r error; do
-                FILE=$(echo "$error" | jq -r '.file')
+                FILE=$(echo "$error" | jq -r '.filePath')
                 while IFS= read -r msg; do
                   LINE=$(echo "$msg" | jq -r '.line')
                   MESSAGE=$(echo "$msg" | jq -r '.message')
