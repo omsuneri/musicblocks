@@ -340,8 +340,8 @@ class SaveInterface {
     saveWAV(activity) {
         document.body.style.cursor = "wait";
         activity.logo.recording = true;
-        activity.logo.synth.setupRecorder();
-        activity.logo.synth.recorder.start();
+        activity.logo.synth.setupRecorder(
+        activity.logo.synth.recorder.strt()
         activity.logo.runLogoCommands();
         activity.textMsg(_("Your recording is in progress."));
     }
