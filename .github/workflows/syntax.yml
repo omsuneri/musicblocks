@@ -48,7 +48,7 @@ jobs:
 
             ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(.messages | length) | add // 0')
 
-            if [[ "$ERROR_COUNT" -gt 0 ]]; then
+            if [ "$ERROR_COUNT" -gt 0 ]; then
               ERROR_FOUND=true
               COMMENT_LIST="["
 
@@ -57,7 +57,7 @@ jobs:
                 LINE_NUM=$(echo "$LINE" | jq -r '.messages.line // 0')  # Convert null to 0
                 ERROR_MSG=$(echo "$LINE" | jq -r '.messages.message')
 
-                if [[ "$LINE_NUM" -gt 0 ]]; then  # Only add valid errors
+                if [ "$LINE_NUM" -gt 0 ]; then  # Only add valid errors
                   COMMENT="{\"path\": \"$FILE_PATH\", \"position\": $LINE_NUM, \"body\": \"❌ Syntax error on line $LINE_NUM: $ERROR_MSG\"}"
                   COMMENT_LIST+="$COMMENT,"
                 fi
@@ -73,7 +73,7 @@ jobs:
           echo "Final ERROR_FOUND: $ERROR_FOUND"
           echo "Final COMMENTS: $COMMENTS"
 
-          if [[ "$ERROR_FOUND" == "true" ]]; then
+          if [ "$ERROR_FOUND" == "true" ]; then
             exit 1
           fi
 
