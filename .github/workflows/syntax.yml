@@ -41,26 +41,26 @@ jobs:
             echo "Checking syntax in: $file"
 
             # Run ESLint and capture output
-            OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$file" || echo "[]")
+            OUTPUT=$(npx eslint --no-ignore --ext .js --format json "$file" 2>/dev/null || echo "[]")
 
             # Print ESLint output for debugging
             echo "ESLint Output: $OUTPUT"
 
-            # Check if ESLint output contains errors
-            ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(select(.messages | length > 0)) | length')
+            # Extract errors count properly
+            ERROR_COUNT=$(echo "$OUTPUT" | jq 'map(.messages | length) | add')
 
             if [[ "$ERROR_COUNT" -gt 0 ]]; then
               ERROR_FOUND="true"
 
               # Extract errors and format PR comments
-              echo "$OUTPUT" | jq -c '.[]' | while IFS= read -r error; do
-                FILE=$(echo "$error" | jq -r '.filePath')
+              echo "$OUTPUT" | jq -c '.[]' | while IFS= read -r file_data; do
+                FILE=$(echo "$file_data" | jq -r '.filePath' | sed "s|/home/runner/work/musicblocks/musicblocks/||")
 
-                echo "$error" | jq -c '.messages[] | select(.fatal == true)' | while IFS= read -r msg; do
+                echo "$file_data" | jq -c '.messages[] | select(.fatal == true)' | while IFS= read -r msg; do
                   LINE=$(echo "$msg" | jq -r '.line')
                   MESSAGE=$(echo "$msg" | jq -r '.message')
 
-                  COMMENTS+=$(printf "%s\n" "{\"path\":\"$FILE\",\"position\":$LINE,\"body\":\"Please correct the syntax error on line $LINE: $MESSAGE\"},")
+                  COMMENTS+=$(printf "%s\n" "{\"path\":\"$FILE\",\"position\":$LINE,\"body\":\"❌ Syntax error on line $LINE: $MESSAGE\"},")
                 done
               done
             fi
@@ -91,7 +91,6 @@ jobs:
 
           PAYLOAD=$(jq -n --argjson comments "$COMMENTS" '{comments: $comments}')
 
-          echo "Sending review comments..."
           curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -H "Accept: application/vnd.github.v3+json" \
                -d "$PAYLOAD" \
@@ -106,3 +105,4 @@ jobs:
                -H "Accept: application/vnd.github.v3+json" \
                -d '{"body": "✅ No syntax errors found! Great job!"}' \
                https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments
+
