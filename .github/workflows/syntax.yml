@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensures full history for correct diff
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -24,7 +26,8 @@ jobs:
       - name: Get changed JavaScript files
         id: get_files
         run: |
-          FILES=$(git diff --diff-filter=d --name-only origin/${{ github.base_ref }}..origin/${{ github.head_ref }} -- '*.js')
+          git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }} ${{ github.head_ref }}
+          FILES=$(git diff --diff-filter=d --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- '*.js')
           echo "CHANGED_FILES=$FILES" >> $GITHUB_ENV
           echo "Changed files: $FILES"
 
@@ -42,7 +45,6 @@ jobs:
 
             if [[ "$ERROR_COUNT" -gt 0 ]]; then
               ERROR_FOUND=true
-
               echo "$OUTPUT" | jq -c '.[] | {filePath: .filePath, messages: .messages[]}' | while read -r LINE; do
                 FILE_PATH=$(echo "$LINE" | jq -r '.filePath' | sed "s|$GITHUB_WORKSPACE/||")
                 LINE_NUM=$(echo "$LINE" | jq -r '.messages.line')
@@ -83,5 +85,3 @@ jobs:
                -H "Accept: application/vnd.github.v3+json" \
                -d '{"body": "✅ No syntax errors found! Great job!"}' \
                https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments
-
-
