@@ -77,7 +77,6 @@ jobs:
           } > "$COMMENT_FILE"
 
       - name: PR comment
-        if: steps.results.outputs.TESTS_PASSED == 'false'
         run: |
           # Define the content of the comment
           COMMENT_BODY=$(cat "${{ steps.results.outputs.COMMENT_FILE }}")
