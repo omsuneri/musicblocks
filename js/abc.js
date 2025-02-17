@@ -284,44 +284,44 @@ const processABCNotes = function(logo, turtle) {
                                 NOTATIONROUNDDOWN];
                         j++; // Jump to next note.
                         k++; // Increment notes in tuplet.
-                    } else {
-                        // eslint-disable-next-line no-console
-                        console.debug("ignoring " + notes);
-                        j++; // Jump to next note.
-                        k++; // Increment notes in tuplet.
-                    }
-                }
+                //     } else {
+                //         // eslint-disable-next-line no-console
+                //         console.debug("ignoring " + notes);
+                //         j++; // Jump to next note.
+                //         k++; // Increment notes in tuplet.
+                //     }
+                // }
 
-                // FIXME: Debug for ABC
-                if (i + j - 1 < logo.notation.notationStaging[turtle].length - 1) {
-                    const nextObj = logo.notation.notationStaging[turtle][i + j];
-                    if (typeof nextObj === "string" && nextObj === ")") {
-                        // logo.notationNotes[turtle] += '';
-                        i += 1;
-                    } else {
-                        logo.notationNotes[turtle] += " ";
-                    }
-                } else {
-                    logo.notationNotes[turtle] += " ";
-                }
+                // // FIXME: Debug for ABC
+                // if (i + j - 1 < logo.notation.notationStaging[turtle].length - 1) {
+                //     const nextObj = logo.notation.notationStaging[turtle][i + j];
+                //     if (typeof nextObj === "string" && nextObj === ")") {
+                //         // logo.notationNotes[turtle] += '';
+                //         i += 1;
+                //     } else {
+                //         logo.notationNotes[turtle] += " ";
+                //     }
+                // } else {
+                //     logo.notationNotes[turtle] += " ";
+                // }
 
                 return j;
             };
 
-            if (obj[NOTATIONTUPLETVALUE] > 0) {
-                if (incompleteTuplet === 0) {
-                    const tupletFraction = toFraction(tupletDuration /
-                                                    targetDuration);
-                    logo.notationNotes[turtle] +=
-                        "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
-                    i += __processTuplet(
-                        logo, turtle, i, obj[NOTATIONTUPLETVALUE]) - 1;
-                } else {
-                    const tupletFraction = toFraction(
-                        obj[NOTATIONTUPLETVALUE] / incompleteTuplet);
-                    logo.notationNotes[turtle] +=
-                        "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
-                    i += __processTuplet(logo, turtle, i, incompleteTuplet) - 1;
+            // if (obj[NOTATIONTUPLETVALUE] > 0) {
+            //     if (incompleteTuplet === 0) {
+            //         const tupletFraction = toFraction(tupletDuration /
+            //                                         targetDuration);
+            //         logo.notationNotes[turtle] +=
+            //             "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
+            //         i += __processTuplet(
+            //             logo, turtle, i, obj[NOTATIONTUPLETVALUE]) - 1;
+            //     } else {
+            //         const tupletFraction = toFraction(
+            //             obj[NOTATIONTUPLETVALUE] / incompleteTuplet);
+            //         logo.notationNotes[turtle] +=
+            //             "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
+            //         i += __processTuplet(logo, turtle, i, incompleteTuplet) - 1;
                 }
 
                 targetDuration = 0;
