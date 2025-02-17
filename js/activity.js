@@ -2579,7 +2579,7 @@ class Activity {
         /*
           Prepare a list of blocks for the search bar autocompletion.
          */
-        this.prepSearchWidget = () => {
+        this.prepSearchW                                                    idget = () => {
             //searchWidget.style.visibility = "hidden";
             this.searchBlockPosition = [100, 100];
 

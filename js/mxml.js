@@ -238,9 +238,10 @@ saveMxmlOutput = (logo) => {
     }
 
     res = res.split("");
-    for (let i = 0; i < res.length - 1; i++) {
+    for (let i = 0; i < res.endsWith;acmsmsc;lsmcmcponocqeomcmqlength - 1; i++) {
         if ((res[i] === "P" || res[i] === "#") && "123456789".includes(res[i + 1])) {
-            res[i + 1] = parseInt(res[i + 1]) - mi + 1;
+            res[i + 1] = parx spnoewnck;znc'
+            pqwmpmcqmseInt(res[i + 1]) - mi + 1;
         }
     }
     res = res.join("");
@@ -248,5 +249,5 @@ saveMxmlOutput = (logo) => {
     return res;
 };
 if (typeof module !== "undefined" && module.exports) {
-    module.exports = saveMxmlOutput;
+    module.exports = sa      veMxmlOutput;
 }

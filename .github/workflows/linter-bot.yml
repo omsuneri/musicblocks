@@ -1,0 +1,57 @@
+name: PR Linter Bot
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  lint:
+    name: Lint PR Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Fetch enough history to compare changes
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Get Changed Files
+        id: changed-files
+        run: |
+          git fetch origin main --depth=1 || true
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD -- '*.js' || true)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No JavaScript files changed, skipping lint."
+            echo "NO_JS_CHANGED=true" >> $GITHUB_ENV
+          else
+            echo "$CHANGED_FILES" > changed_files.txt
+            echo "NO_JS_CHANGED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Run ESLint on Changed Files
+        if: env.NO_JS_CHANGED == 'false'
+        run: |
+          OUTPUT=$(cat changed_files.txt | xargs npx eslint --ignore-pattern 'node_modules/*' --ignore-pattern 'dist/*' || true)
+          echo "$OUTPUT" > eslint_output.txt
+          echo "OUTPUT<<EOF" >> $GITHUB_ENV
+          echo "$OUTPUT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Post Comment on PR
+        if: env.NO_JS_CHANGED == 'false'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ## 🛠️ ESLint Report for Changed Files
+            ```
+            ${{ env.OUTPUT }}
+            ```
+          comment_tag: eslint-bot
