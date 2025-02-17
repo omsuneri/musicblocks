@@ -308,20 +308,20 @@ const processABCNotes = function(logo, turtle) {
                 return j;
             };
 
-            if (obj[NOTATIONTUPLETVALUE] > 0) {
-                if (incompleteTuplet === 0) {
-                    const tupletFraction = toFraction(tupletDuration /
-                                                    targetDuration);
-                    logo.notationNotes[turtle] +=
-                        "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
-                    i += __processTuplet(
-                        logo, turtle, i, obj[NOTATIONTUPLETVALUE]) - 1;
-                } else {
-                    const tupletFraction = toFraction(
-                        obj[NOTATIONTUPLETVALUE] / incompleteTuplet);
-                    logo.notationNotes[turtle] +=
-                        "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
-                    i += __processTuplet(logo, turtle, i, incompleteTuplet) - 1;
+            // if (obj[NOTATIONTUPLETVALUE] > 0) {
+            //     if (incompleteTuplet === 0) {
+            //         const tupletFraction = toFraction(tupletDuration /
+            //                                         targetDuration);
+            //         logo.notationNotes[turtle] +=
+            //             "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
+            //         i += __processTuplet(
+            //             logo, turtle, i, obj[NOTATIONTUPLETVALUE]) - 1;
+            //     } else {
+            //         const tupletFraction = toFraction(
+            //             obj[NOTATIONTUPLETVALUE] / incompleteTuplet);
+            //         logo.notationNotes[turtle] +=
+            //             "(" + tupletFraction[0] + ":" + tupletFraction[1] + "";
+            //         i += __processTuplet(logo, turtle, i, incompleteTuplet) - 1;
                 }
 
                 targetDuration = 0;
