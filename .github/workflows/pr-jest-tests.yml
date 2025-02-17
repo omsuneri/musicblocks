@@ -1,4 +1,3 @@
-
 name: Run Jest Tests on PR
 
 on:
@@ -79,7 +78,6 @@ jobs:
 
       - name: PR Comment
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.PAT }} # Correct way to use PAT with gh CLI
         run: |
-          gh auth login --with-token <<< "$GITHUB_TOKEN"
           gh pr comment ${{ github.event.pull_request.number }} --body-file "$COMMENT_FILE"
