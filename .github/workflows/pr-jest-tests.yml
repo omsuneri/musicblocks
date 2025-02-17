@@ -15,27 +15,22 @@ jobs:
       contents: read
 
     steps:
-      # Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Setup Node.js version 20
       - name: Setup Nodejs
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Install dependencies
       - name: Install Dependencies
         run: npm install
 
-      # Run Jest tests and output results to a JSON file
       - name: Run Jest Tests
         id: jest
         run: |
           npm test -- --json --outputFile=jest-results.json || echo "TESTS_FAILED=true" >> $GITHUB_ENV
 
-      # Read Jest results and handle the output
       - name: Read Jest Results
         id: results
         run: |
@@ -77,7 +72,6 @@ jobs:
             fi
           } > "$COMMENT_FILE"
 
-      # Use action to comment on the PR
       - name: PR comment
         uses: thollander/actions-comment-pull-request@v3
         with:
@@ -85,4 +79,3 @@ jobs:
           pr-number: ${{ steps.results.outputs.PR_NUMBER }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
