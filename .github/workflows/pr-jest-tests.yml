@@ -36,6 +36,7 @@ jobs:
         run: |
           if [ "$TESTS_FAILED" = "true" ]; then
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
+            # Parsing the failed test names correctly
             FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | map(split("/") | last) | join("\n")' jest-results.json)
             echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
             echo "$FAILED_TESTS" >> $GITHUB_ENV
@@ -55,11 +56,13 @@ jobs:
             echo "${{ env.FAILED_TESTS }}"
             echo '```'
           } > "$COMMENT_FILE"
-          echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_OUTPUT   # Correctly setting COMMENT_FILE as output
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT         # Correctly setting PR_NUMBER as output
+          echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_OUTPUT
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: PR comment
         uses: thollander/actions-comment-pull-request@v3
         with:
-          file-path: ${{ steps.results.outputs.COMMENT_FILE }}  # Using the COMMENT_FILE from previous step
-          pr-number: ${{ steps.results.outputs.PR_NUMBER }}      # Using the PR_NUMBER from previous step
+          file-path: ${{ steps.results.outputs.COMMENT_FILE }}
+          pr-number: ${{ steps.results.outputs.PR_NUMBER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
