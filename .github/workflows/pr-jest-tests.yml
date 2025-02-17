@@ -91,7 +91,10 @@ jobs:
           GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
 
+          # Ensure COMMENT_BODY is properly escaped as JSON
+          COMMENT_BODY_ESCAPED=$(echo "$COMMENT_BODY" | jq -Rs .)
+          
           curl -s -H "Authorization: token ${GH_TOKEN}" \
                -X POST \
-               -d "{\"body\":$COMMENT_BODY}" \
+               -d "{\"body\":$COMMENT_BODY_ESCAPED}" \
                $COMMENT_URL
