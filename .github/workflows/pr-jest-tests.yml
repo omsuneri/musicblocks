@@ -76,25 +76,26 @@ jobs:
             fi
           } > "$COMMENT_FILE"
 
-      - name: Escape comment content
-        run: |
-          COMMENT_BODY=$(cat "${{ steps.results.outputs.COMMENT_FILE }}")
-          # Escape the comment body for special characters and ensure it's handled correctly in the API request
-          ESCAPED_COMMENT_BODY=$(echo "$COMMENT_BODY" | jq -Rs .)
-          echo "ESCAPED_COMMENT_BODY=$ESCAPED_COMMENT_BODY" >> $GITHUB_ENV
-
       - name: PR comment
-        if: steps.pr-changes.outputs.changes != '[]'
+        if: steps.results.outputs.TESTS_PASSED == 'false'
         run: |
-          COMMENT_BODY="${{ env.ESCAPED_COMMENT_BODY }}"
+          # Read comment content from the temporary file
+          COMMENT_BODY=$(cat "${{ steps.results.outputs.COMMENT_FILE }}")
+
+          # Define PR Number
           PR_NUMBER="${{ steps.results.outputs.PR_NUMBER }}"
+
+          # Define GitHub Token (use GitHub Actions token)
           GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          # Define the GitHub API URL for posting the comment on the PR
           COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
 
-          # Ensure COMMENT_BODY is properly escaped as JSON
-          COMMENT_BODY_ESCAPED=$(echo "$COMMENT_BODY" | jq -Rs .)
-          
+          # Escape the comment body for correct JSON formatting
+          ESCAPED_COMMENT_BODY=$(echo "$COMMENT_BODY" | jq -Rs .)
+
+          # Use `curl` to post the comment
           curl -s -H "Authorization: token ${GH_TOKEN}" \
                -X POST \
-               -d "{\"body\":$COMMENT_BODY_ESCAPED}" \
+               -d "{\"body\":$ESCAPED_COMMENT_BODY}" \
                $COMMENT_URL
