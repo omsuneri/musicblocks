@@ -284,26 +284,26 @@ const processABCNotes = function(logo, turtle) {
                                 NOTATIONROUNDDOWN];
                         j++; // Jump to next note.
                         k++; // Increment notes in tuplet.
-                    } else {
-                        // eslint-disable-next-line no-console
-                        console.debug("ignoring " + notes);
-                        j++; // Jump to next note.
-                        k++; // Increment notes in tuplet.
-                    }
-                }
+                //     } else {
+                //         // eslint-disable-next-line no-console
+                //         console.debug("ignoring " + notes);
+                //         j++; // Jump to next note.
+                //         k++; // Increment notes in tuplet.
+                //     }
+                // }
 
-                // FIXME: Debug for ABC
-                if (i + j - 1 < logo.notation.notationStaging[turtle].length - 1) {
-                    const nextObj = logo.notation.notationStaging[turtle][i + j];
-                    if (typeof nextObj === "string" && nextObj === ")") {
-                        // logo.notationNotes[turtle] += '';
-                        i += 1;
-                    } else {
-                        logo.notationNotes[turtle] += " ";
-                    }
-                } else {
-                    logo.notationNotes[turtle] += " ";
-                }
+                // // FIXME: Debug for ABC
+                // if (i + j - 1 < logo.notation.notationStaging[turtle].length - 1) {
+                //     const nextObj = logo.notation.notationStaging[turtle][i + j];
+                //     if (typeof nextObj === "string" && nextObj === ")") {
+                //         // logo.notationNotes[turtle] += '';
+                //         i += 1;
+                //     } else {
+                //         logo.notationNotes[turtle] += " ";
+                //     }
+                // } else {
+                //     logo.notationNotes[turtle] += " ";
+                // }
 
                 return j;
             };
