@@ -76,8 +76,12 @@ jobs:
             fi
           } > "$COMMENT_FILE"
 
+      - name: Debug Output
+        run: |
+          echo "TESTS_PASSED: $TESTS_PASSED"
+          echo "COMMENT_BODY: $(cat ${{ steps.results.outputs.COMMENT_FILE }})"
+
       - name: PR comment
-        if: steps.results.outputs.TESTS_PASSED == 'false'
         run: |
           # Read comment content from the temporary file
           COMMENT_BODY=$(cat "${{ steps.results.outputs.COMMENT_FILE }}")
