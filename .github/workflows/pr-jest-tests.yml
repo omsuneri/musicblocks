@@ -55,11 +55,15 @@ jobs:
             echo "${{ env.FAILED_TESTS }}"
             echo '```'
           } > "$COMMENT_FILE"
+          echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_ENV   # Storing COMMENT_FILE path in environment variable
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV         # Storing PR_NUMBER in environment variable
 
       - name: PR comment
         uses: thollander/actions-comment-pull-request@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file-path: ${{ env.COMMENT_FILE }}
-          pr-number: ${{ env.PR_NUMBER }}
+          file-path: ${{ env.COMMENT_FILE }}    # Correctly referencing COMMENT_FILE from environment variable
+          pr-number: ${{ env.PR_NUMBER }}      # Correctly referencing PR_NUMBER from environment variable
+          message: |
+            ${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}
