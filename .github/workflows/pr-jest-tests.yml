@@ -77,7 +77,8 @@ jobs:
           } > "$COMMENT_FILE"
 
       - name: PR Comment
-        run: |
-          gh pr comment --body-file "$COMMENT_FILE" --repo "$GITHUB_REPOSITORY" --token "$GITHUB_TOKEN"
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          gh auth login --with-token <<< "$GITHUB_TOKEN"
+          gh pr comment ${{ github.event.pull_request.number }} --body-file "$COMMENT_FILE"
