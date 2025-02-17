@@ -15,51 +15,70 @@ jobs:
       contents: read
 
     steps:
+      # Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Setup Node.js version 20
       - name: Setup Nodejs
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      # Install dependencies
       - name: Install Dependencies
         run: npm install
 
+      # Run Jest tests and output results to a JSON file
       - name: Run Jest Tests
         id: jest
         run: |
           npm test -- --json --outputFile=jest-results.json || echo "TESTS_FAILED=true" >> $GITHUB_ENV
 
+      # Read Jest results and handle the output
       - name: Read Jest Results
         id: results
         run: |
+          # Check if tests failed and set the appropriate environment variables
           if [ "$TESTS_FAILED" = "true" ]; then
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
             FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | map(split("/") | last) | join("\n")' jest-results.json)
-            echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
-            echo "$FAILED_TESTS" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
+            echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
           else
             echo "TESTS_PASSED=true" >> $GITHUB_ENV
             echo "FAILED_TESTS=None" >> $GITHUB_ENV
           fi
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          COMMENT_FILE=$(mktemp)
-          {
-            echo "${{ env.TESTS_PASSED == 'true' && '✅ All Jest tests passed! This PR is ready to merge.' || '❌ Some Jest tests failed. Please check the logs and fix the issues before merging.' }}"
-            echo ""
-            echo "**Failed Tests:**"
-            echo ""
-            echo '```'
-            echo "${{ env.FAILED_TESTS }}"
-            echo '```'
-          } > "$COMMENT_FILE"
-          echo "COMMENT_FILE=$COMMENT_FILE" >> GITHUB_OUTPUT
-          echo "PR_NUMBER=$PR_NUMBER" >> GITHUB_OUTPUT
 
+          # Extract PR number
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          # Generate a temporary file for the comment
+          COMMENT_FILE=$(mktemp)
+
+          # Prepare the comment with the test result and failed tests (if any)
+          echo "TESTS_PASSED=${{ env.TESTS_PASSED }}" >> $GITHUB_ENV
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_OUTPUT
+
+          # Generate content for the comment file
+          {
+            if [ "$TESTS_PASSED" = "true" ]; then
+              echo "✅ All Jest tests passed! This PR is ready to merge."
+            else
+              echo "❌ Some Jest tests failed. Please check the logs and fix the issues before merging."
+              echo ""
+              echo "**Failed Tests:**"
+              echo ""
+              echo '```'
+              echo "$FAILED_TESTS"
+              echo '```'
+            fi
+          } > "$COMMENT_FILE"
+
+      # Use action to comment on the PR
       - name: PR comment
         uses: thollander/actions-comment-pull-request@v3
         with:
           file-path: ${{ steps.results.outputs.COMMENT_FILE }}
           pr-number: ${{ steps.results.outputs.PR_NUMBER }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
