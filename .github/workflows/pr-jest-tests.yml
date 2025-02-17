@@ -32,12 +32,10 @@ jobs:
       - name: Read Jest Results
         id: results
         run: |
-          # Default TESTS_FAILED to false
           if [ -z "$TESTS_FAILED" ]; then
             TESTS_FAILED=false
           fi
 
-          # Set TESTS_PASSED properly
           if [ "$TESTS_FAILED" = "true" ]; then
             TESTS_PASSED=false
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
@@ -51,17 +49,12 @@ jobs:
             echo "FAILED_TESTS=None" >> $GITHUB_ENV
           fi
 
-          # Extract PR number
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-
-          # Generate a temporary file for the comment
           COMMENT_FILE=$(mktemp)
 
-          # Save variables to GITHUB_OUTPUT
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_OUTPUT
 
-          # Generate content for the comment file
           {
             if [ "$TESTS_PASSED" = "true" ]; then
               echo "✅ All Jest tests passed! This PR is ready to merge."
@@ -76,8 +69,12 @@ jobs:
             fi
           } > "$COMMENT_FILE"
 
+      - name: Verify GH CLI Auth
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: gh auth status || echo "⚠️ Authentication failed!"
+
       - name: PR Comment
         env:
-          GH_TOKEN: ${{ secrets.PAT }} # Correct way to use PAT with gh CLI
-        run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body-file "$COMMENT_FILE"
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file "$COMMENT_FILE"
