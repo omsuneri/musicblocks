@@ -1,7 +1,7 @@
 name: Run Jest Tests on PR
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -10,12 +10,11 @@ jobs:
   test:
     name: Run Jest Tests
     runs-on: ubuntu-latest
-    
     permissions: 
       pull-requests: write
       contents: read
       issues: write
-      
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -45,7 +44,7 @@ jobs:
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
             FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | map(split("/") | last) | join("\n")' jest-results.json)
             echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
-            echo "$FAILED_TESTS" >> $GITHUB_ENV
+            echo "$FAILED_TESTS" | sed 's/^/    /' >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           else
             TESTS_PASSED=true
@@ -64,8 +63,7 @@ jobs:
           if [ "$TESTS_PASSED" = "true" ]; then
             COMMENT_BODY="✅ All Jest tests passed! This PR is ready to merge."
           else
-            COMMENT_BODY="❌ Some Jest tests failed. Please check the logs and fix the issues before merging.\n\n**Failed Tests:**\n\n\`\`\`\n$FAILED_TESTS\n\`\`\`"
+            COMMENT_BODY="❌ Some Jest tests failed. Please check the logs and fix the issues before merging.\n\n**Failed Tests:**\n\n\`\`\`\n$(echo "$FAILED_TESTS" | sed 's/^/    /')\n\`\`\`"
           fi
 
           echo "$COMMENT_BODY" | gh pr comment ${{ steps.results.outputs.PR_NUMBER }} --body-file -
-
