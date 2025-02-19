@@ -1,3 +1,5 @@
+name: Run Jest Tests on PR
+
 on:
   pull_request:
     types:
@@ -68,14 +70,12 @@ jobs:
             fi
           } > "$COMMENT_FILE"
 
-          # Export variables for later steps
           echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_ENV
 
-      - name: Post PR Comment using gh CLI
+      - name: Post PR Comment
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
           COMMENT_FILE: ${{ env.COMMENT_FILE }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           gh pr comment "$PR_NUMBER" --body-file "$COMMENT_FILE"
-
