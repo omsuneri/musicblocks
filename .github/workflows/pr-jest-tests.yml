@@ -70,6 +70,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "$PR_NUMBER" != "0" ]; then
-            gh pr comment "$PR_NUMBER" --body-file "${{ steps.results.outputs.COMMENT_FILE }}"
-          fi
+         if [ "$PR_NUMBER" != "0" ]; then
+           git fetch origin pull/$PR_NUMBER/head:pr-$PR_NUMBER
+           git checkout pr-$PR_NUMBER
+           gh pr comment "$PR_NUMBER" --body-file "${{ steps.results.outputs.COMMENT_FILE }}"
+         fi
