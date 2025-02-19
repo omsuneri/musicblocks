@@ -1,15 +1,19 @@
 name: Run Jest Tests on PR
 
 on:
-  pull_request:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
 
 jobs:
   test:
     name: Run Jest Tests
     runs-on: ubuntu-latest
-    permissions:
+    permissions: 
+      pull-requests: write
       contents: read
-      pull-requests: write  # Keep only if needed
+      issues: write
 
     steps:
       - name: Checkout Repository
@@ -31,14 +35,16 @@ jobs:
       - name: Read Jest Results
         id: results
         run: |
+          # Default TESTS_FAILED to false
           if [ -z "$TESTS_FAILED" ]; then
             TESTS_FAILED=false
           fi
 
+          # Set TESTS_PASSED properly
           if [ "$TESTS_FAILED" = "true" ]; then
             TESTS_PASSED=false
             echo "TESTS_PASSED=false" >> $GITHUB_ENV
-            FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | map(split("/") | last) | join("\n")' jest-results.json || echo "Parsing error")
+            FAILED_TESTS=$(jq -r '[.testResults[] | select(.status == "failed") | .name] | map(split("/") | last) | join("\n")' jest-results.json)
             echo "FAILED_TESTS<<EOF" >> $GITHUB_ENV
             echo "$FAILED_TESTS" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
@@ -48,10 +54,18 @@ jobs:
             echo "FAILED_TESTS=None" >> $GITHUB_ENV
           fi
 
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH" || echo "0")
+          # Extract PR number
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 
+          # Generate a temporary file for the comment
           COMMENT_FILE=$(mktemp)
 
+          # Save variables to GITHUB_OUTPUT
+          echo "TESTS_PASSED=$TESTS_PASSED" >> $GITHUB_ENV
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "COMMENT_FILE=$COMMENT_FILE" >> $GITHUB_OUTPUT
+
+          # Generate content for the comment file
           {
             if [ "$TESTS_PASSED" = "true" ]; then
               echo "✅ All Jest tests passed! This PR is ready to merge."
@@ -68,10 +82,8 @@ jobs:
 
       - name: Post PR Comment using gh CLI
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
+          COMMENT_FILE: ${{ steps.results.outputs.COMMENT_FILE }}
+          PR_NUMBER: ${{ steps.results.outputs.PR_NUMBER }}
         run: |
-         if [ "$PR_NUMBER" != "0" ]; then
-           git fetch origin pull/$PR_NUMBER/head:pr-$PR_NUMBER
-           git checkout pr-$PR_NUMBER
-           gh pr comment "$PR_NUMBER" --body-file "${{ steps.results.outputs.COMMENT_FILE }}"
-         fi
+          gh pr comment "$PR_NUMBER" --body-file "$COMMENT_FILE"
