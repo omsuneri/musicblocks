@@ -348,82 +348,82 @@ const processABCNotes = function(logo, turtle) {
                     logo.notationNotes[turtle] += " ";
                 }
 
-                if (obj[NOTATIONSTACCATO]) {
-                    logo.notationNotes[turtle] += ".";
-                }
+//                 if (obj[NOTATIONSTACCATO]) {
+//                     logo.notationNotes[turtle] += ".";
+//                 }
 
-                if (obj[NOTATIONINSIDECHORD] > 0) {
-                    // Is logo the first note in the chord?
-                    if (i === 0 ||
-                        logo.notation.notationStaging[turtle][i - 1][
-                            NOTATIONINSIDECHORD
-                        ] !== obj[NOTATIONINSIDECHORD]) {
-                        // Open the chord.
-                        logo.notationNotes[turtle] += "[";
-                    }
+//                 if (obj[NOTATIONINSIDECHORD] > 0) {
+//                     // Is logo the first note in the chord?
+//                     if (i === 0 ||
+//                         logo.notation.notationStaging[turtle][i - 1][
+//                             NOTATIONINSIDECHORD
+//                         ] !== obj[NOTATIONINSIDECHORD]) {
+//                         // Open the chord.
+//                         logo.notationNotes[turtle] += "[";
+//                     }
 
-                    logo.notationNotes[turtle] += note;
+//                     logo.notationNotes[turtle] += note;
 
-                    // Is logo the last note in the chord?
-                    if (i === logo.notation.notationStaging[turtle].length - 1
-                        || logo.notation.notationStaging[turtle][i + 1][
-                            NOTATIONINSIDECHORD] !== obj[NOTATIONINSIDECHORD]) {
-                        // Close the chord and add note duration.
-                        logo.notationNotes[turtle] += "]";
-                        logo.notationNotes[turtle] += __convertDuration(
-                            obj[NOTATIONDURATION]);
-                        for (let d = 0; d < obj[NOTATIONDOTCOUNT]; d++) {
-                            logo.notationNotes[turtle] += " ";
-                        }
+//                     // Is logo the last note in the chord?
+//                     if (i === logo.notation.notationStaging[turtle].length - 1
+//                         || logo.notation.notationStaging[turtle][i + 1][
+//                             NOTATIONINSIDECHORD] !== obj[NOTATIONINSIDECHORD]) {
+//                         // Close the chord and add note duration.
+//                         logo.notationNotes[turtle] += "]";
+//                         logo.notationNotes[turtle] += __convertDuration(
+//                             obj[NOTATIONDURATION]);
+//                         for (let d = 0; d < obj[NOTATIONDOTCOUNT]; d++) {
+//                             logo.notationNotes[turtle] += " ";
+//                         }
 
-                        if (articulation) {
-                            logo.notationNotes[turtle] += " ";
-                        }
+//                         if (articulation) {
+//                             logo.notationNotes[turtle] += " ";
+//                         }
 
-                        logo.notationNotes[turtle] += " ";
-                    }
-                } else {
-                    logo.notationNotes[turtle] += note;
-                    logo.notationNotes[turtle] += __convertDuration(
-                        obj[NOTATIONDURATION]);
-                    for (let d = 0; d < obj[NOTATIONDOTCOUNT]; d++) {
-                        logo.notationNotes[turtle] += ".";
-                    }
+//                         logo.notationNotes[turtle] += " ";
+//                     }
+//                 } else {
+//                     logo.notationNotes[turtle] += note;
+//                     logo.notationNotes[turtle] += __convertDuration(
+//                         obj[NOTATIONDURATION]);
+//                     for (let d = 0; d < obj[NOTATIONDOTCOUNT]; d++) {
+//                         logo.notationNotes[turtle] += ".";
+//                     }
 
-                    if (articulation) {
-                        logo.notationNotes[turtle] += "";
-                    }
-                }
+//                     if (articulation) {
+//                         logo.notationNotes[turtle] += "";
+//                     }
+//                 }
 
-                if (obj[NOTATIONSTACCATO]) {
-                    logo.notationNotes[turtle] += ".";
-                }
+//                 if (obj[NOTATIONSTACCATO]) {
+//                     logo.notationNotes[turtle] += ".";
+//                 }
 
-                targetDuration = 0;
-                tupletDuration = 0;
-            }
+//                 targetDuration = 0;
+//                 tupletDuration = 0;
+//             }
 
-            logo.notationNotes[turtle] += " ";
+//             logo.notationNotes[turtle] += " ";
 
-            if (queueSlur) {
-                queueSlur = false;
-                logo.notationNotes[turtle] += "";
-            }
-        }
-    }
-};
+//             if (queueSlur) {
+//                 queueSlur = false;
+//                 logo.notationNotes[turtle] += "";
+//             }
+//         }
+//     }
+// };
 
-/**
- * Generates ABC notation output based on the notation staging for each turtle in the activity.
- * @param {object} activity - The activity object containing logo and notation information.
- * @returns {string} The generated ABC notation output.
- */
-const saveAbcOutput = function(activity) {
-    // let turtleCount = 0;
+// /**
+//  * Generates ABC notation output based on the notation staging for each turtle in the activity.
+//  * @param {object} activity - The activity object containing logo and notation information.
+//  * @returns {string} The generated ABC notation output.
+//  */
+// const saveAbcOutput = function(activity) {
+//     // let turtleCount = 0;
 
-    activity.logo.notationOutput = getABCHeader();
+//     activity.logo.notationOutput = getABCHeader();
 
-    // for (const t in activity.logo.notation.notationStaging) {
+//     // for (const t in activity.logo.notation.notationStaging) {
     //     turtleCount += 1;
     // }
     // eslint-disable-next-line no-console
