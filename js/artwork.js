@@ -285,46 +285,46 @@ const PALETTECOLORS0 = {
     action: [22.5, 80, 57],
     media: [57.5, 70, 28],
     number: [0, 70, 42],
-    boolean: [30, 80, 57],
-    flow: [15, 60, 50],
-    sensors: [7.5, 60, 80],
-    extras: [12.5, 60, 80], // [7.5, 50, 50],
-    program: [12.5, 60, 80],
-    myblocks: [57.5, 70, 14],
-    heap: [17.5, 60, 70],
-    dictionary: [17.5, 60, 70],
-    mice: [7.5, 50, 0]
-};
+//     boolean: [30, 80, 57],
+//     flow: [15, 60, 50],
+//     sensors: [7.5, 60, 80],
+//     extras: [12.5, 60, 80], // [7.5, 50, 50],
+//     program: [12.5, 60, 80],
+//     myblocks: [57.5, 70, 14],
+//     heap: [17.5, 60, 70],
+//     dictionary: [17.5, 60, 70],
+//     mice: [7.5, 50, 0]
+// };
 
-const PALETTECOLORS = {
-    widgets: [37.5, 70, 35],
-    pitch: [37.5, 70, 42],
-    rhythm: [12.5, 60, 49],
-    meter: [12.5, 60, 49],
-    tone: [57.5, 50, 21],
-    ornament: [57.5, 50, 21],
-    intervals: [37.5, 70, 42],
-    volume: [57.5, 50, 21],
-    drum: [57.5, 50, 21],
-    mouse: [37.5, 70, 35],
-    pen: [57.5, 50, 21],
-    boxes: [12.5, 60, 49],
-    action: [22.5, 80, 35],
-    media: [57.5, 70, 21],
-    number: [0, 70, 28],
-    boolean: [30, 80, 35],
-    flow: [15, 60, 28],
-    sensors: [7.5, 60, 35],
-    extras: [12.5, 60, 49], // [7.5, 50, 28],
-    program: [12.5, 60, 49],
-    myblocks: [57.5, 70, 14],
-    heap: [17.5, 60, 28],
-    dictionary: [17.5, 60, 28],
-    mice: [7.5, 50, 0]
-};
+// const PALETTECOLORS = {
+//     widgets: [37.5, 70, 35],
+//     pitch: [37.5, 70, 42],
+//     rhythm: [12.5, 60, 49],
+//     meter: [12.5, 60, 49],
+//     tone: [57.5, 50, 21],
+//     ornament: [57.5, 50, 21],
+//     intervals: [37.5, 70, 42],
+//     volume: [57.5, 50, 21],
+//     drum: [57.5, 50, 21],
+//     mouse: [37.5, 70, 35],
+//     pen: [57.5, 50, 21],
+//     boxes: [12.5, 60, 49],
+//     action: [22.5, 80, 35],
+//     media: [57.5, 70, 21],
+//     number: [0, 70, 28],
+//     boolean: [30, 80, 35],
+//     flow: [15, 60, 28],
+//     sensors: [7.5, 60, 35],
+//     extras: [12.5, 60, 49], // [7.5, 50, 28],
+//     program: [12.5, 60, 49],
+//     myblocks: [57.5, 70, 14],
+//     heap: [17.5, 60, 28],
+//     dictionary: [17.5, 60, 28],
+//     mice: [7.5, 50, 0]
+// };
 
-// These colors are calculated at load time from the colors defined above.
-const PALETTEFILLCOLORS = {};
+// // These colors are calculated at load time from the colors defined above.
+// const PALETTEFILLCOLORS = {};
 
 const PALETTESTROKECOLORS = {};
 
