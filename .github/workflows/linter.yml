@@ -31,7 +31,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Install dependencies
-        run: npm install eslint
+        run: npm install eslint@latest
 
       - name: Run ESLint on changed files
         if: env.files != ''
