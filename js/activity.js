@@ -42,10 +42,9 @@
 
 /*
    exported
-
    Activity, LEADING, _THIS_IS_MUSIC_BLOCKS_, _THIS_IS_TURTLE_BLOCKS_,
    globalActivity, hideArrows, doAnalyzeProject
- */
+*/
 const LEADING = 0;
 const BLOCKSCALES = [1, 1.5, 2, 3, 4];
 const _THIS_IS_MUSIC_BLOCKS_ = true;
@@ -111,9 +110,9 @@ let MYDEFINES = [
     "activity/js-export/API/MeterBlocksAPI",
     "activity/js-export/API/PitchBlocksAPI",
     "activity/js-export/API/IntervalsBlocksAPI",
-    "activity/js-export/API/ToneBlocksAPI",
-    "activity/js-export/API/OrnamentBlocksAPI",
-    "activity/js-export/API/VolumeBlocksAPI",
+    // "activity/js-export/API/ToneBlocksAPI",
+    // "activity/js-export/API/OrnamentBlocksAPI",
+    // "activity/js-export/API/VolumeBlocksAPI",
     "activity/js-export/API/DrumBlocksAPI",
     "activity/js-export/API/DictBlocksAPI",
     "activity/turtleactions/RhythmActions",
