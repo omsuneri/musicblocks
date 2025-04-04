@@ -6,7 +6,7 @@
     <img src="https://img.shields.io/github/license/sugarlabs/musicblocks" />
 </a>
 
-# Music Blocks
+# Music Blocks by sugar labs 
 
 “_All musicians are subconsciously mathematicians._” — Monk
 
